@@ -1,1 +1,10 @@
+# Directories
 **/node_modules/**
+
+**/logs/**
+
+**/dist/**
+**/build**/
+
+# files
+.DS_Store
