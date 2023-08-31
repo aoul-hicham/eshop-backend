@@ -3,7 +3,7 @@ const morgan = require("morgan")
 const setupDotEnv = require("./src/util/env-setup")
 const setupDatabaseConnection = require("./src/util/db-connection-setup")
 const productRouter = require("./src/routers/product.router")
-
+const cors = require("cors")
 
 const app = express()
 const api = process.env.apiUrl
@@ -11,7 +11,9 @@ const api = process.env.apiUrl
 // Setup dotenv
 setupDotEnv()
 
-// Variables
+// enable cors origin
+app.use("cors")
+app.options("*", cors())
 
 // Middleware calls
 app.use(express.json())
