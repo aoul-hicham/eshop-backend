@@ -1,14 +1,18 @@
-const express = require('express');
-const { Product } = require('../models/product.model');
+const express = require('express')
+const { Product } = require('../models/product.model')
 
-const router = express.Router();
+const router = express.Router()
 
 // Get products
-router.get(`/get`, async (req, res) => {
-  const productList = await Product.find();
+router.get('/list', async (req, res) => {
+  try {
+    const productList = await Product.find()
 
-  res.json(productList);
-});
+    res.json({ data: productList })
+  } catch (err) {
+    res.status(500).json({ error: err })
+  }
+})
 
 // Create product
 router.post(`/create`, async (req, res) => {
@@ -17,14 +21,14 @@ router.post(`/create`, async (req, res) => {
       name: req.body.name,
       image: req.body.image,
       countInStock: req.body.countInStock,
-    });
+    })
 
-    const createdProduct = await product.save();
+    const createdProduct = await product.save()
 
-    res.status(201).json(createdProduct);
+    res.status(201).json(createdProduct)
   } catch (err) {
-    res.status(500).json({ error: err, success: false });
+    res.status(500).json({ error: err, success: false })
   }
-});
+})
 
-module.exports = router;
+module.exports = router
