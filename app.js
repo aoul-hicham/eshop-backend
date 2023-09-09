@@ -28,5 +28,5 @@ setupDatabaseConnection()
 
 // Running server
 app.listen(process.env.port, () => {
-  console.log(`server is running on PORT ${process.env.port}... ${api}`)
+  console.log(`server is running on PORT ${process.env.port}`)
 })
