@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose')
 
 const setupDatabaseConnection = () => {
   mongoose
@@ -6,7 +6,7 @@ const setupDatabaseConnection = () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     })
-    .then(console.log("database connection is established"))
+    .then(console.log('database connection is established'))
     .catch((err) => console.log(err))
 }
 

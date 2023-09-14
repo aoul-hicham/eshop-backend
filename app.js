@@ -4,6 +4,7 @@ const setupDotEnv = require("./src/util/env-setup")
 const setupDatabaseConnection = require("./src/util/db-connection-setup")
 const productRouter = require("./src/routers/product.router")
 const categoryRouter = require("./src/routers/category.router")
+const userRouter = require("./src/routers/user.router")
 const cors = require("cors")
 const app = express()
 
@@ -22,6 +23,7 @@ app.use(morgan("tiny"))
 // Routers
 app.use(`${api}/product`, productRouter)
 app.use(`${api}/category`, categoryRouter)
+app.use(`${api}/user`, userRouter)
 
 // Database connection
 setupDatabaseConnection()

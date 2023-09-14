@@ -1,5 +1,6 @@
 const express = require('express')
 const { Category } = require('../models/category.model')
+const { StatusCodes } = require('http-status-codes')
 
 const router = express.Router()
 
@@ -8,9 +9,9 @@ router.get('/list', async (req, res) => {
   try {
     const categories = await Category.find()
 
-    res.status(200).json({ data: categories })
+    res.status(StatusCodes.OK).json({ data: categories })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -21,10 +22,10 @@ router.get('/:id', async (req, res) => {
     const category = await Category.findById(categoryId).exec()
 
     if (!category)
-      res.status(404).json({ statusCode: 404, error: 'No category found' })
-    else res.status(200).json({ data: category })
+      res.status(StatusCodes.NOT_FOUND).json({ error: 'No category found' })
+    else res.status(StatusCodes.OK).json({ data: category })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -35,9 +36,9 @@ router.post('/create', async (req, res) => {
 
     const categoryCreated = await category.save()
 
-    res.status(201).json(categoryCreated)
+    res.status(StatusCodes.CREATED).json(categoryCreated)
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -48,10 +49,10 @@ router.delete('/:id', async (req, res) => {
     await Category.findByIdAndDelete(categoryId).exec()
 
     res
-      .status(204)
+      .status(StatusCodes.NO_CONTENT)
       .json({ message: `The category ${categoryId} has been deleted !` })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -66,9 +67,9 @@ router.put('/', async (req, res) => {
       categoryObject,
     )
 
-    res.status(204).json(categoryUpdated)
+    res.status(StatusCodes.NO_CONTENT).json(categoryUpdated)
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 

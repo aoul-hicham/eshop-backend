@@ -1,6 +1,7 @@
 const express = require('express')
 const { Product } = require('../models/product.model')
 const { Category } = require('../models/category.model')
+const { StatusCodes } = require('http-status-codes')
 
 const router = express.Router()
 
@@ -12,7 +13,7 @@ router.get('/all', async (req, res) => {
 
     res.json({ data: { products: productList, count: countProducts } })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -23,9 +24,9 @@ router.get('/find/:id', async (req, res) => {
       'category',
     )
 
-    res.status(200).json({ data: productData })
+    res.status(StatusCodes.OK).json({ data: productData })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -33,7 +34,7 @@ router.get('/find/:id', async (req, res) => {
 router.get('/count', async (req, res) => {
   const productCount = await Product.find().count()
 
-  res.status(200).json({ data: { productCount: productCount } })
+  res.status(StatusCodes.OK).json({ data: { productCount: productCount } })
 })
 
 // Create product
@@ -43,16 +44,18 @@ router.post(`/create`, async (req, res) => {
 
     if (!categoryData)
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ error: `The category '${req.body.category}' is not exist` })
 
     const product = new Product(req.body)
 
     const createdProduct = await product.save()
 
-    res.status(201).json(createdProduct)
+    res.status(StatusCodes.CREATED).json(createdProduct)
   } catch (err) {
-    res.status(500).json({ error: err, success: false })
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: err, success: false })
   }
 })
 
@@ -64,7 +67,7 @@ router.delete('/:id', async (req, res) => {
 
     res.status(204).send()
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -79,7 +82,7 @@ router.put('/:id', async (req, res) => {
 
     res.status(200).json(newProductData)
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
@@ -94,7 +97,7 @@ router.get('/get/featured/:count?', async (req, res) => {
 
     res.status(200).json({ data: featuredProduct })
   } catch (err) {
-    res.status(500).json({ error: err })
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
