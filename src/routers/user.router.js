@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const express = require('express')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
 const { User } = require('../models/user.model')
 const { StatusCodes } = require('http-status-codes')
@@ -19,7 +20,7 @@ router.get('/all', async (req, res) => {
 })
 
 // Find user by id
-router.get('/:id', async (req, res) => {
+router.get('/find/:id', async (req, res) => {
   try {
     const userId = req.params.id
 
@@ -92,6 +93,50 @@ router.delete('/delete/:id', async (req, res) => {
     await User.findByIdAndDelete(userId)
 
     return res.status(StatusCodes.NO_CONTENT).send()
+  } catch (err) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+  }
+})
+
+// User login
+router.post('/login', async (req, res) => {
+  try {
+    const userAuth = req.body
+    const user = await User.findOne({ email: userAuth.email }).select(
+      'name email passwordHash',
+    )
+
+    // checking user
+    if (!user)
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ error: 'user is not exist' })
+
+    // password comparison
+    const passwordIsValid = await bcrypt.compare(
+      userAuth.password,
+      user.passwordHash,
+    )
+
+    if (!passwordIsValid)
+      return res
+        .status(StatusCodes.NO_CONTENT)
+        .json({ error: 'email or password are not correct' })
+
+    // Token generation
+    const secretKey = process.env.SECRET_KEY
+
+    let userAuthObj = {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+    }
+
+    const token = jwt.sign(userAuthObj, secretKey, { expiresIn: '1h' })
+
+    userAuthObj = { ...userAuthObj, token }
+
+    return res.status(StatusCodes.OK).json(userAuthObj)
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
   }
