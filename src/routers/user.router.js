@@ -124,7 +124,7 @@ router.post('/login', async (req, res) => {
         .json({ error: 'email or password are not correct' })
 
     // Token generation
-    const secretKey = process.env.SECRET_KEY
+    const secretKey = process.env.secret_key
 
     let userAuthObj = {
       userId: user.id,
@@ -132,7 +132,7 @@ router.post('/login', async (req, res) => {
       email: user.email,
     }
 
-    const token = jwt.sign(userAuthObj, secretKey, { expiresIn: '1h' })
+    const token = jwt.sign(userAuthObj, secretKey, { expiresIn: '5h' })
 
     userAuthObj = { ...userAuthObj, token }
 
