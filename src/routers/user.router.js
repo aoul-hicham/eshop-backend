@@ -130,6 +130,7 @@ router.post('/login', async (req, res) => {
       userId: user.id,
       name: user.name,
       email: user.email,
+      isAdmin: user.isAdmin,
     }
 
     const token = jwt.sign(userAuthObj, secretKey, { expiresIn: '5h' })

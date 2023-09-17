@@ -7,8 +7,8 @@ const categoryRouter = require("./src/routers/category.router")
 const userRouter = require("./src/routers/user.router")
 const cors = require("cors")
 const {generateSecretKeySchedular} = require("./src/utils/scheduleUtils")
-const {jwtAuth} = require("./src/utils/jwtUtil")
-const handleUnAuthRequests = require("./src/middlewares/handleUnAuthRequests")
+const {jwtAuth} = require("./src/middlewares/jwtAuth")
+const handlingUnauthorizedRequests = require("./src/middlewares/handlingUnauthorizedRequests")
 
 const app = express()
 
@@ -26,7 +26,7 @@ app.options("*", cors())
 app.use(express.json())
 app.use(morgan("tiny"))
 app.use(jwtAuth())
-app.use(handleUnAuthRequests)
+app.use(handlingUnauthorizedRequests)
 
 // Routers
 app.use(`${api}/product`, productRouter)

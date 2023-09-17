@@ -1,6 +1,6 @@
 const { StatusCodes } = require('http-status-codes')
 
-const handleUnAuthRequests = (err, req, res, next) => {
+const handlingUnauthorizedRequests = (err, req, res, next) => {
   let responseMessage = null
 
   if (err.name === 'UnauthorizedError') {
@@ -19,4 +19,4 @@ const handleUnAuthRequests = (err, req, res, next) => {
   next()
 }
 
-module.exports = handleUnAuthRequests
+module.exports = handlingUnauthorizedRequests
