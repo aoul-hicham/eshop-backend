@@ -103,7 +103,7 @@ router.post('/login', async (req, res) => {
   try {
     const userAuth = req.body
     const user = await User.findOne({ email: userAuth.email }).select(
-      'name email passwordHash',
+      'name email passwordHash isAdmin',
     )
 
     // checking user
@@ -126,18 +126,16 @@ router.post('/login', async (req, res) => {
     // Token generation
     const secretKey = process.env.secret_key
 
-    let userAuthObj = {
+    let payload = {
       userId: user.id,
       name: user.name,
       email: user.email,
       isAdmin: user.isAdmin,
     }
 
-    const token = jwt.sign(userAuthObj, secretKey, { expiresIn: '5h' })
+    const token = jwt.sign(payload, secretKey, { expiresIn: '5h' })
 
-    userAuthObj = { ...userAuthObj, token }
-
-    return res.status(StatusCodes.OK).json(userAuthObj)
+    return res.status(StatusCodes.OK).json({ token: token })
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
   }
