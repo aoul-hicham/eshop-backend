@@ -8,7 +8,7 @@ const { StatusCodes } = require('http-status-codes')
 
 const router = express.Router()
 
-// Find all users
+//* Find all users
 router.get('/all', async (req, res) => {
   try {
     const usersList = await User.find().select('-passwordHash, -__v')
@@ -19,7 +19,7 @@ router.get('/all', async (req, res) => {
   }
 })
 
-// Find user by id
+//* Find user by id
 router.get('/find/:id', async (req, res) => {
   try {
     const userId = req.params.id
@@ -41,7 +41,7 @@ router.get('/find/:id', async (req, res) => {
   }
 })
 
-// Create user
+//* Create user
 router.post('/create', async (req, res) => {
   try {
     let user = new User(req.body)
@@ -65,7 +65,7 @@ router.post('/create', async (req, res) => {
   }
 })
 
-// Update user
+//* Update user
 router.put('/update/:id', async (req, res) => {
   try {
     const userBody = req.body
@@ -79,7 +79,7 @@ router.put('/update/:id', async (req, res) => {
   }
 })
 
-// Delete user
+//* Delete user
 router.delete('/delete/:id', async (req, res) => {
   try {
     const userId = req.params.id
@@ -98,7 +98,7 @@ router.delete('/delete/:id', async (req, res) => {
   }
 })
 
-// User login
+//* User login
 router.post('/login', async (req, res) => {
   try {
     const userAuth = req.body
@@ -138,6 +138,17 @@ router.post('/login', async (req, res) => {
     return res.status(StatusCodes.OK).json({ token: token })
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+  }
+})
+
+//* Counting user
+router.get('/count', async (req, res) => {
+  try {
+    const usersCount = await User.find({ isAdmin: false }).count()
+
+    return res.status(StatusCodes.OK).json({ userCount: usersCount })
+  } catch (err) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
 
