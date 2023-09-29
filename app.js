@@ -9,6 +9,7 @@ const cors = require("cors")
 const {generateSecretKeySchedular} = require("./src/utils/scheduleUtils")
 const {jwtAuth} = require("./src/middlewares/jwtAuth")
 const handlingUnauthorizedRequests = require("./src/middlewares/handlingUnauthorizedRequests")
+const orderRouter = require("./src/routers/order.router")
 
 const app = express()
 
@@ -32,6 +33,7 @@ app.use(handlingUnauthorizedRequests)
 app.use(`${api}/product`, productRouter)
 app.use(`${api}/category`, categoryRouter)
 app.use(`${api}/user`, userRouter)
+app.use(`${api}/order`, orderRouter)
 
 // Running server
 app.listen(process.env.port, () => {

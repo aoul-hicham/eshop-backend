@@ -1,3 +1,7 @@
+/*
+This middleware used to handle un authorized tokens and when to revoke a tokken
+The error thrown is catched inside handlingUnauthorizedRequests middleware
+*/
 const { expressjwt } = require('express-jwt')
 const publicRoutes = require('../utils/publicRoutes')
 
@@ -13,6 +17,7 @@ const jwtAuth = () => {
   })
 }
 
+//* When token should be revoked
 const isRevoked = (req, token) => {
   if (!token.payload.isAdmin) return true
 }
