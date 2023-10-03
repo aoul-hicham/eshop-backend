@@ -4,6 +4,8 @@ const { Order } = require('../models/order.model')
 const { OrderItem } = require('../models/orderItem.model')
 // const { Product } = require('../models/product.model')
 const { getOrderTotalPrice } = require('../helpers/order-helper')
+const mongoose = require('mongoose')
+const _ = require('lodash')
 
 const router = express.Router()
 
@@ -11,10 +13,34 @@ const router = express.Router()
 router.get('/all', async (req, res) => {
   try {
     const orders = await Order.find()
+      .populate('user', 'name')
+      .populate({
+        path: 'orderItems',
+        populate: { path: 'product', populate: { path: 'category' } },
+      })
+      .sort('dateOrdered')
 
     return res.status(StatusCodes.OK).json({ data: orders })
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err)
+  }
+})
+
+// Get order by id
+router.get('/get/:id', async (req, res) => {
+  try {
+    const orderId = req.params.id
+
+    if (!mongoose.Types.ObjectId.isValid(orderId))
+      throw new Error('Invalid order id has been provided')
+
+    const order = await Order.findById(orderId)
+
+    return res.status(StatusCodes.OK).json(order)
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message })
   }
 })
 
@@ -54,6 +80,50 @@ router.post('/add-order-items', async (req, res) => {
     const createdOrderItems = await OrderItem.create(orderItems)
 
     return res.status(StatusCodes.CREATED).json(createdOrderItems)
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message })
+  }
+})
+
+// Sum of orders
+router.get('/total-sales', async (req, res) => {
+  try {
+    // Using aggregation to group all documents into one and sum the total sales
+    const totalSales = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: '$totalPrice' },
+        },
+      },
+    ])
+
+    console.log(typeof totalSales)
+
+    return res.status(StatusCodes.OK).json(totalSales)
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message })
+  }
+})
+
+// Get user orders
+router.get('/user/:id', async (req, res) => {
+  try {
+    const userId = req.params.id
+
+    const validUserId = mongoose.Types.ObjectId.isValid(userId)
+
+    if (!validUserId) throw new Error('A non valid user id has been provided')
+
+    const userOrders = await Order.where('user', userId)
+
+    if (!_.isEmpty(userOrders))
+      return res.status(StatusCodes.OK).json(userOrders)
+    else return res.status(StatusCodes.NO_CONTENT).json([])
   } catch (err) {
     return res
       .status(StatusCodes.INTERNAL_SERVER_ERROR)

@@ -24,3 +24,6 @@ build
 *.njsproj
 *.sln
 *.sw?
+
+#Rest client related files
+*.http

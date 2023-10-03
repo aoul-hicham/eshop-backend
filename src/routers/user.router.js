@@ -133,7 +133,7 @@ router.post('/login', async (req, res) => {
       isAdmin: user.isAdmin,
     }
 
-    const token = jwt.sign(payload, secretKey, { expiresIn: '5h' })
+    const token = jwt.sign(payload, secretKey, { expiresIn: '24h' })
 
     return res.status(StatusCodes.OK).json({ token: token })
   } catch (err) {
