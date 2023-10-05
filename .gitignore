@@ -27,3 +27,6 @@ build
 
 #Rest client related files
 *.http
+
+# product images
+public/uploads/*

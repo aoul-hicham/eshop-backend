@@ -2,6 +2,7 @@ const express = require('express')
 const { Product } = require('../models/product.model')
 const { Category } = require('../models/category.model')
 const { StatusCodes } = require('http-status-codes')
+const { uploadOptions } = require('../middlewares/product-image-upload-middleware')
 
 const router = express.Router()
 
@@ -38,16 +39,23 @@ router.get('/count', async (req, res) => {
 })
 
 // Create product
-router.post(`/create`, async (req, res) => {
+router.post(`/create`, uploadOptions.single('image'), async (req, res) => {
   try {
+    // cheking category if exist
     const categoryData = await Category.findById(req.body.category)
 
     if (!categoryData)
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ error: `The category '${req.body.category}' is not exist` })
+        .json({ error: `The category provided is not exist` })
 
-    const product = new Product(req.body)
+    // Creating the produt
+    const productData = req.body
+
+    // Overriding the image filename to the full path
+    productData['image'] = req.file.filename
+
+    const product = new Product(productData)
 
     const createdProduct = await product.save()
 
