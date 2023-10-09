@@ -2,7 +2,11 @@ const express = require('express')
 const { Product } = require('../models/product.model')
 const { Category } = require('../models/category.model')
 const { StatusCodes } = require('http-status-codes')
-const { uploadOptions } = require('../middlewares/product-image-upload-middleware')
+const {
+  uploadOptions,
+} = require('../middlewares/product-image-upload-middleware')
+const { checkingObjectId } = require('../helpers/validators-helpers')
+const _ = require('lodash')
 
 const router = express.Router()
 
@@ -93,6 +97,34 @@ router.put('/:id', async (req, res) => {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 })
+
+// Update product gallery images : PUT product/update-gallery/:productId
+router.put(
+  '/update-gallery/:productId',
+  uploadOptions.array('images', 10),
+  async (req, res) => {
+    try {
+      const productId = req.params.productId
+      const productImages = []
+
+      // custom objectId validator
+      checkingObjectId(productId)
+
+      //
+      if (!_.isEmpty(req.files)) {
+        req.files.map((file) => {
+          productImages.push(file.filename)
+        })
+      }
+
+      return res.status(200).json(req.files)
+    } catch (err) {
+      return res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ error: err.message })
+    }
+  },
+)
 
 // Get Featured product
 router.get('/get/featured/:count?', async (req, res) => {
