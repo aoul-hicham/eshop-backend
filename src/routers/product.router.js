@@ -1,144 +1,31 @@
 const express = require('express')
-const { Product } = require('../models/product.model')
-const { Category } = require('../models/category.model')
-const { StatusCodes } = require('http-status-codes')
-const {
-  uploadOptions,
-} = require('../middlewares/product-image-upload-middleware')
-const { checkingObjectId } = require('../helpers/validators-helpers')
-const _ = require('lodash')
+const { uploadOptions } = require('../middlewares/product-image-upload-middleware')
+const ProductController = require('../controllers/product.controller')
 
 const router = express.Router()
 
 // Get all products
-router.get('/all', async (req, res) => {
-  try {
-    const productList = await Product.find()
-    const countProducts = await Product.count()
-
-    res.json({ data: { products: productList, count: countProducts } })
-  } catch (err) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
-  }
-})
+router.get('/all', ProductController.findAllProducts)
 
 // Get product by id
-router.get('/find/:id', async (req, res) => {
-  try {
-    const productData = await Product.findById(req.params.id).populate(
-      'category',
-    )
-
-    res.status(StatusCodes.OK).json({ data: productData })
-  } catch (err) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
-  }
-})
+router.get('/find/:id', ProductController.findProductById)
 
 // Counting products
-router.get('/count', async (req, res) => {
-  const productCount = await Product.find().count()
-
-  res.status(StatusCodes.OK).json({ data: { productCount: productCount } })
-})
+router.get('/count', ProductController.countingProducts)
 
 // Create product
-router.post(`/create`, uploadOptions.single('image'), async (req, res) => {
-  try {
-    // cheking category if exist
-    const categoryData = await Category.findById(req.body.category)
-
-    if (!categoryData)
-      return res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ error: `The category provided is not exist` })
-
-    // Creating the produt
-    const productData = req.body
-
-    // Overriding the image filename to the full path
-    productData['image'] = req.file.filename
-
-    const product = new Product(productData)
-
-    const createdProduct = await product.save()
-
-    res.status(StatusCodes.CREATED).json(createdProduct)
-  } catch (err) {
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: err, success: false })
-  }
-})
+router.post(`/create`, uploadOptions.single('image'), ProductController.createProduct)
 
 // Delete specific product
-router.delete('/:id', async (req, res) => {
-  try {
-    const productId = req.params.id
-    await Product.findByIdAndDelete(productId)
-
-    res.status(204).send()
-  } catch (err) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
-  }
-})
+router.delete('/:id', ProductController.deleteProduct)
 
 // Update product
-router.put('/:id', async (req, res) => {
-  try {
-    const productId = req.params.id
-
-    const newProductData = req.body.product
-
-    await Product.findByIdAndUpdate(productId, newProductData)
-
-    res.status(200).json(newProductData)
-  } catch (err) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
-  }
-})
+router.put('/:id', ProductController.updateProduct)
 
 // Update product gallery images : PUT product/update-gallery/:productId
-router.put(
-  '/update-gallery/:productId',
-  uploadOptions.array('images', 10),
-  async (req, res) => {
-    try {
-      const productId = req.params.productId
-      const productImages = []
-
-      // custom objectId validator
-      checkingObjectId(productId)
-
-      //
-      if (!_.isEmpty(req.files)) {
-        req.files.map((file) => {
-          productImages.push(file.filename)
-        })
-      }
-
-      return res.status(200).json(req.files)
-    } catch (err) {
-      return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ error: err.message })
-    }
-  },
-)
+router.put('/update-gallery/:productId', uploadOptions.array('images', 10), ProductController.updateProductGallery)
 
 // Get Featured product
-router.get('/get/featured/:count?', async (req, res) => {
-  try {
-    const featuredProductCount = req.params.count ? req.params.count : 0
-
-    const featuredProduct = await Product.find({ isFeatured: true }).limit(
-      featuredProductCount,
-    )
-
-    res.status(200).json({ data: featuredProduct })
-  } catch (err) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
-  }
-})
+router.get('/get/featured/:count?', ProductController.countingFeatureProducts)
 
 module.exports = router

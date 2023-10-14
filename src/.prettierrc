@@ -2,5 +2,6 @@
     "singleQuote": true,
     "bracketSameLine": true,
     "editor.formatOnSave": true,
-    "semi": false
+    "semi": false,
+    "printWidth": 200
 }
