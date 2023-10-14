@@ -1,4 +1,5 @@
 const express = require("express")
+const path = require("path")
 const morgan = require("morgan")
 const setupDotEnv = require("./src/utils/env-setup")
 const setupDatabaseConnection = require("./src/utils/db-connection-setup")
@@ -28,6 +29,10 @@ app.use(express.json())
 app.use(morgan("tiny"))
 app.use(jwtAuth())
 app.use(handlingUnauthorizedRequests)
+app.use(
+  "/public/uploads",
+  express.static(path.join(__dirname, "public/uploads"))
+)
 
 // Routers
 app.use(`${api}/product`, productRouter)

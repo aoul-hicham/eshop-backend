@@ -19,6 +19,9 @@ const publicRoutes = () => {
       methods: ['GET', 'OPTIONS'],
     },
     `${apiUrl}/category/list`,
+
+    // Public folder
+    pathToRegexp('/public/uploads/(.*)'),
   ]
 }
 
