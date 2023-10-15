@@ -4,11 +4,12 @@ const jwt = require('jsonwebtoken')
 const { User } = require('../models/user.model')
 const { StatusCodes } = require('http-status-codes')
 const { checkingObjectId } = require('../helpers/validators-helpers')
+const UserService = require('../services/user-service')
 
 // Find all users
 const findAllUsers = async (req, res) => {
   try {
-    const usersList = await User.find().select('-passwordHash, -__v')
+    const usersList = await UserService.getUsers().select('-passwordHash, -__v')
 
     return res.status(StatusCodes.OK).json({ data: usersList })
   } catch (err) {
@@ -24,7 +25,7 @@ const findUserById = async (req, res) => {
     // IN case user is not exist
     checkingObjectId(userId, true, 'Invalid id provided')
 
-    const user = await User.findById(userId).select('-passwordHash')
+    const user = await UserService.findUserById(userId)
 
     if (user) res.status(StatusCodes.OK).json({ user: user })
     else res.status(StatusCodes.NOT_FOUND).json({ user: null })
@@ -39,14 +40,14 @@ const createUser = async (req, res) => {
     let user = new User(req.body)
 
     // checking email
-    const emailAlreadyExist = await User.findOne({ email: user.email })
+    const emailAlreadyExist = await UserService.findUserByEmail(user.email)
 
-    if (emailAlreadyExist) return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: `The email ${user.email} is already exist` })
+    if (emailAlreadyExist) throw new Error(`The email ${user.email} is already exist`)
 
     // password encrypt
     user.passwordHash = await bcrypt.hash(user.passwordHash, 10)
 
-    const createdUser = await user.save()
+    const createdUser = await UserService.createUser(user)
 
     return res.status(StatusCodes.CREATED).json(createdUser)
   } catch (err) {
@@ -60,7 +61,7 @@ const updateUser = async (req, res) => {
     const userBody = req.body
     const userId = req.params.id
 
-    await User.findByIdAndUpdate(userId, userBody)
+    await UserService.updateUser(userId, userBody)
 
     return res.status(StatusCodes.OK).json({ message: 'User has been updated' })
   } catch (err) {
@@ -74,7 +75,7 @@ const deleteUser = async (req, res) => {
     const userId = req.params.id
     checkingObjectId(userId)
 
-    await User.findByIdAndDelete(userId)
+    await UserService.deleteUser(userId)
 
     return res.status(StatusCodes.NO_CONTENT).send()
   } catch (err) {
@@ -86,7 +87,7 @@ const deleteUser = async (req, res) => {
 const login = async (req, res) => {
   try {
     const userAuth = req.body
-    const user = await User.findOne({ email: userAuth.email }).select('name email passwordHash isAdmin')
+    const user = await UserService.findUserByEmail(userAuth.email).select('name email passwordHash isAdmin')
 
     // checking user
     if (!user) return res.status(StatusCodes.NOT_FOUND).json({ error: 'user is not exist' })
@@ -117,7 +118,7 @@ const login = async (req, res) => {
 // Counting user
 const countingUsers = async (req, res) => {
   try {
-    const usersCount = await User.find({ isAdmin: false }).count()
+    const usersCount = await UserService.countingUsers()
 
     return res.status(StatusCodes.OK).json({ userCount: usersCount })
   } catch (err) {
