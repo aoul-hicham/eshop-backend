@@ -1,20 +1,12 @@
 const { StatusCodes } = require('http-status-codes')
-const { Order } = require('../models/order.model')
-const { OrderItem } = require('../models/orderItem.model')
-const { getOrderTotalPrice } = require('../helpers/order-helper')
-const mongoose = require('mongoose')
+const OrderService = require('../services/order-service')
+const OrderItemService = require('../services/order-item-service')
 const _ = require('lodash')
 
 // Get all orders
 const findAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate('user', 'name')
-      .populate({
-        path: 'orderItems',
-        populate: { path: 'product', populate: { path: 'category' } },
-      })
-      .sort('dateOrdered')
+    const orders = await OrderService.getAllOrders()
 
     return res.status(StatusCodes.OK).json({ data: orders })
   } catch (err) {
@@ -27,9 +19,7 @@ const findOrderById = async (req, res) => {
   try {
     const orderId = req.params.id
 
-    if (!mongoose.Types.ObjectId.isValid(orderId)) throw new Error('Invalid order id has been provided')
-
-    const order = await Order.findById(orderId)
+    const order = await OrderService.getOrderById(orderId)
 
     return res.status(StatusCodes.OK).json(order)
   } catch (err) {
@@ -40,26 +30,13 @@ const findOrderById = async (req, res) => {
 // Add an order
 const createOrder = async (req, res) => {
   try {
-    let orderBody = req.body
+    let orderData = req.body
+    const userId = req.auth.userId
 
-    // Calculating total order from orderItems
-    const orderTotalPrice = await getOrderTotalPrice(orderBody.orderItems)
+    // adding the order
+    const addedOrder = OrderService.addOrder(orderData, userId)
 
-    // Saving OrderItems first
-    const orderItems = await OrderItem.create(orderBody.orderItems)
-    // transforming the orderItems array to keep only the ids
-    const transformedOrderItems = orderItems.map((item) => item.id)
-
-    // Assign dynamically the required data to be send with the order
-    orderBody['totalPrice'] = orderTotalPrice
-    orderBody['user'] = req.auth.userId
-    orderBody['orderItems'] = transformedOrderItems
-
-    // Order creation
-    const order = new Order(orderBody)
-    const createdOrder = await order.save()
-
-    return res.status(StatusCodes.CREATED).json(createdOrder)
+    return res.status(StatusCodes.CREATED).json(addedOrder)
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(err.message)
   }
@@ -70,7 +47,7 @@ const createOrderItem = async (req, res) => {
   try {
     const orderItems = req.body
 
-    const createdOrderItems = await OrderItem.create(orderItems)
+    const createdOrderItems = await OrderItemService.addOrderItem(orderItems)
 
     return res.status(StatusCodes.CREATED).json(createdOrderItems)
   } catch (err) {
@@ -82,14 +59,7 @@ const createOrderItem = async (req, res) => {
 const sumOrders = async (req, res) => {
   try {
     // Using aggregation to group all documents into one and sum the total sales
-    const totalSales = await Order.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: '$totalPrice' },
-        },
-      },
-    ])
+    const totalSales = await OrderService.countingOrders()
 
     console.log(typeof totalSales)
 
@@ -104,11 +74,7 @@ const getUserOrder = async (req, res) => {
   try {
     const userId = req.params.id
 
-    const validUserId = mongoose.Types.ObjectId.isValid(userId)
-
-    if (!validUserId) throw new Error('A non valid user id has been provided')
-
-    const userOrders = await Order.where('user', userId)
+    const userOrders = await OrderService.getUserOrder(userId)
 
     if (!_.isEmpty(userOrders)) return res.status(StatusCodes.OK).json(userOrders)
     else return res.status(StatusCodes.NO_CONTENT).json([])
