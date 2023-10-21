@@ -15,7 +15,7 @@ const createCategory = async (req, res) => {
 // Get all categories
 const findAllCategories = async (req, res) => {
   try {
-    const categories = CategoryService.getAllCategories()
+    const categories = await CategoryService.getAllCategories()
 
     res.status(StatusCodes.OK).json({ data: categories })
   } catch (err) {

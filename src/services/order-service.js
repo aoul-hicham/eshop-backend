@@ -1,7 +1,7 @@
 const { Order } = require('../models/order.model')
 const OrderItemService = require('../services/order-item-service')
+const ProductService = require('../services/product-service')
 const { checkingObjectId } = require('../helpers/validators-helpers.js')
-const { getProductById } = require('../services/product-service')
 
 // Get all orders
 const getAllOrders = async () => {
@@ -69,7 +69,7 @@ const getOrderTotalPrice = async (orderItems) => {
     const productId = item.product
     const productQuantity = item.quantity
 
-    const product = await getProductById(productId).select('price')
+    const product = await ProductService.getProductById(productId)
 
     if (product) return product.price * productQuantity
   })

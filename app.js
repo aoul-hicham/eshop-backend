@@ -26,7 +26,7 @@ app.options("*", cors())
 
 // Middleware calls
 app.use(express.json())
-app.use(morgan("tiny"))
+app.use(morgan(process.env.morgan_usage))
 app.use(jwtAuth())
 app.use(handlingUnauthorizedRequests)
 app.use(

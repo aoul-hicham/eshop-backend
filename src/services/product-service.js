@@ -13,6 +13,11 @@ const getAllProducts = async () => {
   return await Product.find()
 }
 
+// Get featured products
+const getFeaturedProducts = async (limit = 0) => {
+  return await Product.find({ isFeatured: true }).limit(limit)
+}
+
 // Counting products
 const countingProducts = async (featuredOnly = false) => {
   const countingDate = featuredOnly
@@ -40,6 +45,7 @@ const updateProduct = async (productId, productData) => {
 module.exports = {
   createProduct,
   getAllProducts,
+  getFeaturedProducts,
   countingProducts,
   getProductById,
   deleteProduct,

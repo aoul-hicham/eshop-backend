@@ -4,12 +4,15 @@ const _ = require('lodash')
 
 const CategoryService = require('../services/category-service')
 const ProductService = require('../services/product-service')
+const logger = require('../utils/logger-util')
 
 // Create Product
 const createProduct = async (req, res) => {
   try {
     // cheking if the category is exist
     const categoryData = await CategoryService.getCategoryById(req.body.category)
+
+    console.log(categoryData)
 
     if (!categoryData)
       return res
@@ -22,11 +25,12 @@ const createProduct = async (req, res) => {
     // Overriding the image filename to the full path
     productData['image'] = req.file.filename
 
-    const createdProduct = await ProductService.createProduct()
+    const createdProduct = await ProductService.createProduct(productData)
 
     res.status(StatusCodes.CREATED).json(createdProduct)
   } catch (err) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err, success: false })
+    logger.error(err)
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
 }
 
@@ -116,7 +120,8 @@ const updateProductGallery = async (req, res) => {
 // Counting featured products
 const countingFeatureProducts = async (req, res) => {
   try {
-    const featuredProduct = await ProductService.countingProducts(true)
+    const limit = req.params.count ? req.params.count : 0
+    const featuredProduct = await ProductService.getFeaturedProducts(limit)
 
     res.status(200).json({ data: featuredProduct })
   } catch (err) {
