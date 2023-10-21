@@ -1,14 +1,15 @@
 const { StatusCodes } = require('http-status-codes')
-const { Product } = require('../models/product.model')
-const { Category } = require('../models/category.model')
 const { checkingObjectId } = require('../helpers/validators-helpers')
 const _ = require('lodash')
+
+const CategoryService = require('../services/category-service')
+const ProductService = require('../services/product-service')
 
 // Create Product
 const createProduct = async (req, res) => {
   try {
-    // cheking category if exist
-    const categoryData = await Category.findById(req.body.category)
+    // cheking if the category is exist
+    const categoryData = await CategoryService.getCategoryById(req.body.category)
 
     if (!categoryData)
       return res
@@ -21,25 +22,25 @@ const createProduct = async (req, res) => {
     // Overriding the image filename to the full path
     productData['image'] = req.file.filename
 
-    const product = new Product(productData)
-
-    const createdProduct = await product.save()
+    const createdProduct = await ProductService.createProduct()
 
     res.status(StatusCodes.CREATED).json(createdProduct)
   } catch (err) {
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: err, success: false })
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err, success: false })
   }
 }
 
 // Get all products
 const findAllProducts = async (req, res) => {
   try {
-    const productList = await Product.find()
-    const countProducts = await Product.count()
-
-    res.json({ data: { products: productList, count: countProducts } })
+    const products = await ProductService.getAllProducts()
+    const counting = await ProductService.countingProducts()
+    res.json({
+      data: {
+        products: products,
+        count: counting,
+      },
+    })
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
@@ -48,11 +49,8 @@ const findAllProducts = async (req, res) => {
 // Find product by id
 const findProductById = async (req, res) => {
   try {
-    const productData = await Product.findById(req.params.id).populate(
-      'category',
-    )
-
-    res.status(StatusCodes.OK).json({ data: productData })
+    const product = await ProductService.getProductById(req.params.id, 'category')
+    res.status(StatusCodes.OK).json({ data: product })
   } catch (err) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
@@ -60,16 +58,15 @@ const findProductById = async (req, res) => {
 
 // Counting products
 const countingProducts = async (req, res) => {
-  const productCount = await Product.find().count()
-
-  res.status(StatusCodes.OK).json({ data: { productCount: productCount } })
+  const productCounts = await ProductService.countingProducts()
+  res.status(StatusCodes.OK).json({ data: { productCount: productCounts } })
 }
 
 // Delete Product
 const deleteProduct = async (req, res) => {
   try {
-    const productId = req.params.id
-    await Product.findByIdAndDelete(productId)
+    checkingObjectId(req.params.id)
+    await ProductService.deleteProduct(req.params.id)
 
     res.status(204).send()
   } catch (err) {
@@ -82,9 +79,12 @@ const updateProduct = async (req, res) => {
   try {
     const productId = req.params.id
 
+    // checking the product id
+    checkingObjectId(productId)
+
     const newProductData = req.body.product
 
-    await Product.findByIdAndUpdate(productId, newProductData)
+    await ProductService.updateProduct(productId, newProductData)
 
     res.status(200).json(newProductData)
   } catch (err) {
@@ -101,7 +101,6 @@ const updateProductGallery = async (req, res) => {
     // custom objectId validator
     checkingObjectId(productId)
 
-    //
     if (!_.isEmpty(req.files)) {
       req.files.map((file) => {
         productImages.push(file.filename)
@@ -110,20 +109,14 @@ const updateProductGallery = async (req, res) => {
 
     return res.status(200).json(req.files)
   } catch (err) {
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: err.message })
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err.message })
   }
 }
 
 // Counting featured products
 const countingFeatureProducts = async (req, res) => {
   try {
-    const featuredProductCount = req.params.count ? req.params.count : 0
-
-    const featuredProduct = await Product.find({ isFeatured: true }).limit(
-      featuredProductCount,
-    )
+    const featuredProduct = await ProductService.countingProducts(true)
 
     res.status(200).json({ data: featuredProduct })
   } catch (err) {

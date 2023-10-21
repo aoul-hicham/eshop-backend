@@ -1,12 +1,10 @@
 const { StatusCodes } = require('http-status-codes')
-const { Category } = require('../models/category.model')
+const CategoryService = require('../services/category-service')
 
 // Create category
 const createCategory = async (req, res) => {
   try {
-    const category = new Category(req.body)
-
-    const categoryCreated = await category.save()
+    const categoryCreated = await CategoryService.createCategory(req.body)
 
     res.status(StatusCodes.CREATED).json(categoryCreated)
   } catch (err) {
@@ -17,7 +15,7 @@ const createCategory = async (req, res) => {
 // Get all categories
 const findAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find()
+    const categories = CategoryService.getAllCategories()
 
     res.status(StatusCodes.OK).json({ data: categories })
   } catch (err) {
@@ -29,7 +27,7 @@ const findAllCategories = async (req, res) => {
 const findCatgoryById = async (req, res) => {
   try {
     const categoryId = req.params.id
-    const category = await Category.findById(categoryId).exec()
+    const category = await CategoryService.getCategoryById(categoryId)
 
     if (!category) res.status(StatusCodes.NOT_FOUND).json({ error: 'No category found' })
     else res.status(StatusCodes.OK).json({ data: category })
@@ -42,9 +40,11 @@ const findCatgoryById = async (req, res) => {
 const deleteCategory = async (req, res) => {
   try {
     const categoryId = req.params.id
-    await Category.findByIdAndDelete(categoryId).exec()
+    await CategoryService.deleteCategory(categoryId)
 
-    res.status(StatusCodes.NO_CONTENT).json({ message: `The category ${categoryId} has been deleted !` })
+    res
+      .status(StatusCodes.NO_CONTENT)
+      .json({ message: `The category ${categoryId} has been deleted !` })
   } catch (err) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: err })
   }
@@ -54,9 +54,9 @@ const deleteCategory = async (req, res) => {
 const updateCategory = async (req, res) => {
   try {
     const categoryId = req.body.categoryId
-    const categoryObject = req.body.category
+    const categoryData = req.body.category
 
-    const categoryUpdated = await Category.findByIdAndUpdate(categoryId, categoryObject)
+    const categoryUpdated = await CategoryService.updateCategory(categoryId, categoryData)
 
     res.status(StatusCodes.NO_CONTENT).json(categoryUpdated)
   } catch (err) {

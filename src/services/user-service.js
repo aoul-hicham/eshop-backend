@@ -1,18 +1,18 @@
 const { User } = require('../models/user.model')
 
 // Get users
-const getUsers = async () => {
-  return await User.find()
+const getUsers = async (projection = '') => {
+  return await User.find().select(projection)
 }
 
 // Find user by id
-const findUserById = async (userId) => {
-  return await User.findById(userId).select('-passwordHash')
+const findUserById = async (userId, projection) => {
+  return await User.findById(userId).select(projection)
 }
 
 // Find user email
-const findUserByEmail = async (userEmail) => {
-  return await User.findOne({ email: userEmail })
+const findUserByEmail = async (userEmail, projection = '') => {
+  return await User.findOne({ email: userEmail }).select(projection)
 }
 
 // Counting users

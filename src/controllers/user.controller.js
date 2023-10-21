@@ -6,10 +6,43 @@ const { StatusCodes } = require('http-status-codes')
 const { checkingObjectId } = require('../helpers/validators-helpers')
 const UserService = require('../services/user-service')
 
+// User login
+const login = async (req, res) => {
+  try {
+    const userAuth = req.body
+    const user = await UserService.findUserByEmail(userAuth.email, 'name email passwordHash isAdmin')
+
+    // checking user
+    if (!user) return res.status(StatusCodes.NOT_FOUND).json({ error: 'user is not exist' })
+
+    // password comparison
+    const passwordIsValid = await bcrypt.compare(userAuth.password, user.passwordHash)
+
+    if (!passwordIsValid) return res.status(StatusCodes.NO_CONTENT).json({ error: 'email or password are not correct' })
+
+    // Token generation
+    const secretKey = process.env.secret_key
+
+    let payload = {
+      userId: user.id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+    }
+
+    const token = jwt.sign(payload, secretKey, { expiresIn: '24h' })
+
+    return res.status(StatusCodes.OK).json({ token: token })
+  } catch (err) {
+    console.log(err)
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
+  }
+}
+
 // Find all users
 const findAllUsers = async (req, res) => {
   try {
-    const usersList = await UserService.getUsers().select('-passwordHash, -__v')
+    const usersList = await UserService.getUsers('-passwordHash, -__v')
 
     return res.status(StatusCodes.OK).json({ data: usersList })
   } catch (err) {
@@ -25,7 +58,7 @@ const findUserById = async (req, res) => {
     // IN case user is not exist
     checkingObjectId(userId, true, 'Invalid id provided')
 
-    const user = await UserService.findUserById(userId)
+    const user = await UserService.findUserById(userId, '-passwordHash')
 
     if (user) res.status(StatusCodes.OK).json({ user: user })
     else res.status(StatusCodes.NOT_FOUND).json({ user: null })
@@ -78,38 +111,6 @@ const deleteUser = async (req, res) => {
     await UserService.deleteUser(userId)
 
     return res.status(StatusCodes.NO_CONTENT).send()
-  } catch (err) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
-  }
-}
-
-// User login
-const login = async (req, res) => {
-  try {
-    const userAuth = req.body
-    const user = await UserService.findUserByEmail(userAuth.email).select('name email passwordHash isAdmin')
-
-    // checking user
-    if (!user) return res.status(StatusCodes.NOT_FOUND).json({ error: 'user is not exist' })
-
-    // password comparison
-    const passwordIsValid = await bcrypt.compare(userAuth.password, user.passwordHash)
-
-    if (!passwordIsValid) return res.status(StatusCodes.NO_CONTENT).json({ error: 'email or password are not correct' })
-
-    // Token generation
-    const secretKey = process.env.secret_key
-
-    let payload = {
-      userId: user.id,
-      name: user.name,
-      email: user.email,
-      isAdmin: user.isAdmin,
-    }
-
-    const token = jwt.sign(payload, secretKey, { expiresIn: '24h' })
-
-    return res.status(StatusCodes.OK).json({ token: token })
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR)
   }
